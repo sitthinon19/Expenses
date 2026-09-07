@@ -10,6 +10,7 @@ body{margin:0;background:#f5f7f9;font-family:Arial,"Noto Sans Thai",sans-serif;c
 .container{max-width:560px;margin:0 auto;padding:16px}
 .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 3px 18px rgba(0,0,0,.07)}
 h1{font-size:22px;margin:0 0 8px;text-align:center;color:#c62828}
+h1.success-title{color:#137333}
 .info{text-align:center;color:#666;font-size:14px;margin-bottom:18px}
 label{display:block;font-weight:600;margin:12px 0 6px}
 textarea{width:100%;min-height:130px;padding:12px;border:1px solid #d9dee3;border-radius:10px;font:inherit;resize:vertical}
@@ -18,28 +19,78 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .message{display:none;margin-top:14px;padding:12px;border-radius:10px;white-space:pre-line;text-align:center}
 .success{background:#e8f7ed;color:#137333}.error{background:#fdecec;color:#c62828}
 .small{font-size:12px;color:#777}
+.done{display:none;text-align:center}
+.done-icon{font-size:46px;margin-bottom:8px}
+.done-text{font-size:16px;line-height:1.6}
 </style>
 </head>
 <body>
-<div class="container"><div class="card">
-<h1>ไม่อนุมัติใบเบิกค่าใช้จ่าย</h1>
-<div id="info" class="info">กำลังตรวจสอบรายการ...</div>
-<label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
-<textarea id="reason" required placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
-<button id="submitBtn" type="button">ยืนยันไม่อนุมัติ</button>
-<div id="message" class="message"></div>
-<div class="small" style="margin-top:14px;text-align:center">เมื่อยืนยันแล้ว ระบบจะบันทึกเหตุผลและแจ้งพนักงานผ่าน LINE</div>
-</div></div>
+<div class="container">
+  <div class="card">
+
+    <div id="formSection">
+      <h1>ไม่อนุมัติใบเบิกค่าใช้จ่าย</h1>
+      <div id="info" class="info">กำลังตรวจสอบรายการ...</div>
+
+      <label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
+      <textarea id="reason" required placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+
+      <button id="submitBtn" type="button">ยืนยันไม่อนุมัติ</button>
+
+      <div id="message" class="message"></div>
+
+      <div class="small" style="margin-top:14px;text-align:center">
+        เมื่อยืนยันแล้ว ระบบจะบันทึกเหตุผลและแจ้งพนักงานผ่าน LINE
+      </div>
+    </div>
+
+    <div id="doneSection" class="done">
+      <div class="done-icon">✓</div>
+      <h1 class="success-title">ดำเนินการเรียบร้อยแล้ว</h1>
+      <div id="doneInfo" class="done-text"></div>
+      <div class="small" style="margin-top:16px">
+        สามารถปิดหน้านี้ได้
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
-const WEB_APP_URL='https://script.google.com/macros/s/AKfycbwCzzz3CSqI2mhq8DXdnwDh6nO9Kssw0AsqgOGQPRVwJ-aw4amCSXZkgXizc9eV-vYamw/exec';
-const params=new URLSearchParams(location.search);
-const token=params.get('token')||'';
-const expenseId=params.get('expenseId')||'';
-const info=document.getElementById('info');
-const btn=document.getElementById('submitBtn');
-if(expenseId) info.textContent='เลขที่ใบเบิก: '+expenseId;
-else info.textContent='กำลังดำเนินการใบเบิกค่าใช้จ่าย';
-function submitReject(){
+const WEB_APP_URL='https://script.google.com/macros/s/AKfycbyS2KxitkOMP7XnKx3k8-dhr0Ino0Exjl_NWKeGeMH0y7UJMp4k78YRvNEes9UlJ5s-kw/exec';
+
+const params = new URLSearchParams(location.search);
+const token = params.get('token') || '';
+const expenseId = params.get('expenseId') || '';
+const done = params.get('done') === '1';
+
+const info = document.getElementById('info');
+const btn = document.getElementById('submitBtn');
+
+if (expenseId) {
+  info.textContent = 'เลขที่ใบเบิก: ' + expenseId;
+} else {
+  info.textContent = 'กำลังดำเนินการใบเบิกค่าใช้จ่าย';
+}
+
+function showMessage(text, ok) {
+  const el = document.getElementById('message');
+  el.style.display = 'block';
+  el.className = 'message ' + (ok ? 'success' : 'error');
+  el.textContent = text;
+}
+
+function showDone() {
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('doneSection').style.display = 'block';
+
+  document.getElementById('doneInfo').textContent =
+    expenseId
+      ? 'บันทึกผลไม่อนุมัติใบเบิก ' + expenseId + ' เรียบร้อยแล้ว'
+      : 'บันทึกผลไม่อนุมัติเรียบร้อยแล้ว';
+}
+
+function submitReject() {
   const reason = document.getElementById('reason').value.trim();
 
   if (!token) {
@@ -47,10 +98,18 @@ function submitReject(){
     return;
   }
 
+  if (!expenseId) {
+    showMessage('ไม่พบเลขที่ใบเบิก กรุณาเปิดลิงก์จากปุ่มใน LINE อีกครั้ง', false);
+    return;
+  }
+
   if (!reason) {
     showMessage('กรุณาระบุเหตุผลที่ไม่อนุมัติ', false);
     return;
   }
+
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก...';
 
   const url =
     WEB_APP_URL +
@@ -60,9 +119,16 @@ function submitReject(){
     '&expenseId=' + encodeURIComponent(expenseId) +
     '&rejectionReason=' + encodeURIComponent(reason);
 
-  window.location.href = url;
+  // ส่งไป Apps Script เพื่อบันทึกผล
+  // Apps Script จะประมวลผลแล้ว redirect กลับมาหน้านี้ด้วย done=1
+  window.location.replace(url);
 }
-btn.addEventListener('click',submitReject);
+
+if (done) {
+  showDone();
+} else {
+  btn.addEventListener('click', submitReject);
+}
 </script>
 </body>
 </html>
