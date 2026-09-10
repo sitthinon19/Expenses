@@ -1,46 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ไม่อนุมัติคำขอลา</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#222}.wrap{max-width:520px;margin:auto;padding:24px 16px}.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 18px rgba(0,0,0,.08)}h1{font-size:22px;margin:0 0 8px}.sub{color:#666;line-height:1.5}.info{background:#f7f7f7;border-radius:10px;padding:12px;margin:18px 0}.row{display:flex;justify-content:space-between;gap:10px}.label{color:#666}textarea{width:100%;min-height:130px;border:1px solid #ccc;border-radius:10px;padding:12px;font:inherit;margin-top:8px}button{width:100%;margin-top:16px;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:bold;background:#d32f2f;color:#fff;cursor:pointer}button:disabled{opacity:.55}.error{display:none;color:#b71c1c;margin-top:8px}.loading{text-align:center;color:#666;margin-top:10px;display:none}.success{display:none;text-align:center;padding:25px 0}.missing{display:none;background:#fff3f3;color:#a40000;padding:14px;border-radius:10px}
+body{margin:0;background:#f3f5f7;font-family:Arial,"Noto Sans Thai",sans-serif;color:#222}
+.box{max-width:520px;margin:30px auto;padding:20px}.card{background:white;border-radius:18px;padding:24px;box-shadow:0 5px 20px #0001}
+h1{font-size:23px;margin:0 0 8px}.muted{color:#666;line-height:1.5}
+.info{background:#f7f7f7;border-radius:10px;padding:14px;margin:18px 0}
+textarea{width:100%;height:130px;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit;resize:vertical;margin-top:8px}
+button{width:100%;border:0;border-radius:10px;background:#c62828;color:white;padding:14px;margin-top:15px;font-size:16px;font-weight:bold}
+button:disabled{opacity:.5}.err{display:none;color:#c62828;margin-top:9px}.loading{display:none;text-align:center;color:#666;margin-top:10px}.success{display:none;text-align:center;padding:25px 0}
 </style>
 </head>
-<body><div class="wrap"><div class="card">
+<body>
+<div class="box"><div class="card">
 <h1>❌ ไม่อนุมัติคำขอลา</h1>
-<p class="sub">กรุณาระบุเหตุผลในการไม่อนุมัติคำขอลา</p>
-<div class="missing" id="missing">ไม่พบ Token กรุณาเปิดหน้านี้จากปุ่ม “ไม่อนุมัติ” ใน LINE</div>
-<div id="formArea">
-<div class="info"><div class="row"><span class="label">เลขที่คำขอ</span><strong id="leaveId">-</strong></div></div>
-<label><strong>เหตุผลที่ไม่อนุมัติ *</strong></label>
-<textarea id="reason" placeholder="กรุณาระบุเหตุผล"></textarea>
-<div class="error" id="error"></div>
-<button id="submitBtn">ยืนยันไม่อนุมัติ</button>
+<p class="muted">กรุณาระบุเหตุผลก่อนยืนยันการไม่อนุมัติ</p>
+<div class="info"><b>เลขที่คำขอ:</b> <span id="requestId">กำลังโหลด...</span></div>
+
+<div id="main">
+<label><b>เหตุผลที่ไม่อนุมัติ *</b></label>
+<textarea id="reason" placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+<div class="err" id="err"></div>
+<button id="btn" type="button">ยืนยันไม่อนุมัติ</button>
 <div class="loading" id="loading">กำลังบันทึกข้อมูล...</div>
 </div>
-<div class="success" id="success"><h2>✓ บันทึกเรียบร้อย</h2><p>ระบบบันทึกการไม่อนุมัติคำขอลาแล้ว</p></div>
+
+<div class="success" id="success">
+<h2>✓ ไม่อนุมัติเรียบร้อย</h2>
+<p>บันทึกเหตุผลแล้ว และระบบจะดำเนินการแจ้งพนักงานทาง LINE</p>
+</div>
 </div></div>
+
 <script>
-const params=new URLSearchParams(location.search);
-const token=params.get('token')||'';
-const leaveId=params.get('leaveId')||params.get('id')||'';
-const apiUrl=params.get('apiUrl')||'
+const WEB_APP_URL='
 https://script.google.com/macros/s/AKfycbwTBrfYj8cvwczS_9p9CRlHKIeov9T03rRQNLM9HE1cOgWChkdtaQp_iuq4pm2o4UsCaw/exec';
-document.getElementById('leaveId').textContent=leaveId||'-';
-if(!token){document.getElementById('missing').style.display='block';document.getElementById('formArea').style.display='none';}
-document.getElementById('submitBtn').addEventListener('click',async()=>{
- const reason=document.getElementById('reason').value.trim(),err=document.getElementById('error'),btn=document.getElementById('submitBtn');
- err.style.display='none';
- if(!reason){err.textContent='กรุณาระบุเหตุผลที่ไม่อนุมัติ';err.style.display='block';return;}
- if(apiUrl==='
-https://script.google.com/macros/s/AKfycbwTBrfYj8cvwczS_9p9CRlHKIeov9T03rRQNLM9HE1cOgWChkdtaQp_iuq4pm2o4UsCaw/exec'){err.textContent='ยังไม่ได้ตั้งค่า Web App URL';err.style.display='block';return;}
- btn.disabled=true;document.getElementById('loading').style.display='block';
- try{
-  const r=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'rejectLeave',token,leaveId,rejectionReason:reason})});
-  const res=await r.json();
-  if(res&&((res.ok===false)||(res.success===false)))throw new Error(res.message||res.error||'ไม่สามารถบันทึกข้อมูลได้');
-  document.getElementById('formArea').style.display='none';document.getElementById('success').style.display='block';
- }catch(e){err.textContent=e.message||'เกิดข้อผิดพลาด';err.style.display='block';btn.disabled=false;document.getElementById('loading').style.display='none';}
-});
-</script></body></html>
+const qs=new URLSearchParams(location.search);
+const token=qs.get('token')||'';
+const leaveId=qs.get('leaveId')||qs.get('requestId')||qs.get('id')||'';
+
+document.getElementById('requestId').textContent=leaveId||'ไม่พบเลขที่คำขอ';
+
+function showError(t){const e=document.getElementById('err');e.textContent=t;e.style.display='block'}
+
+document.getElementById('btn').onclick=function(){
+ const reason=document.getElementById('reason').value.trim();
+ document.getElementById('err').style.display='none';
+
+ if(!token){showError('ไม่พบ Token กรุณาเปิดลิงก์จากปุ่ม “ไม่อนุมัติ” ใน LINE');return}
+ if(!reason){showError('กรุณาระบุเหตุผลที่ไม่อนุมัติ');return}
+
+ this.disabled=true;
+ document.getElementById('loading').style.display='block';
+
+ // ใช้ form navigation ไป Apps Script แทน fetch
+ // เพื่อไม่ติดปัญหา CORS ของ Google Apps Script
+ const form=document.createElement('form');
+ form.method='GET';
+ form.action=WEB_APP_URL;
+ form.style.display='none';
+
+ const fields={
+   action:'reject',
+   decision:'reject',
+   token:token,
+   leaveId:leaveId,
+   rejectionReason:reason
+ };
+
+ Object.keys(fields).forEach(k=>{
+   const input=document.createElement('input');
+   input.type='hidden';input.name=k;input.value=fields[k];
+   form.appendChild(input);
+ });
+
+ document.body.appendChild(form);
+ form.submit();
+};
+</script>
+</body>
+</html>
