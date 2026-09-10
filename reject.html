@@ -11,124 +11,153 @@ body{margin:0;background:#f5f7f9;font-family:Arial,"Noto Sans Thai",sans-serif;c
 .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 3px 18px rgba(0,0,0,.07)}
 h1{font-size:22px;margin:0 0 8px;text-align:center;color:#c62828}
 h1.success-title{color:#137333}
+h1.warning-title{color:#b26a00}
 .info{text-align:center;color:#666;font-size:14px;margin-bottom:18px}
 label{display:block;font-weight:600;margin:12px 0 6px}
 textarea{width:100%;min-height:130px;padding:12px;border:1px solid #d9dee3;border-radius:10px;font:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:#777}
 button{width:100%;margin-top:14px;border:0;border-radius:11px;padding:14px;background:#c62828;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 button:disabled{opacity:.55;cursor:not-allowed}
 .message{display:none;margin-top:14px;padding:12px;border-radius:10px;white-space:pre-line;text-align:center}
-.success{background:#e8f7ed;color:#137333}.error{background:#fdecec;color:#c62828}
+.success{background:#e8f7ed;color:#137333}.error{background:#fdecec;color:#c62828}.warning{background:#fff4df;color:#8a5a00}
 .small{font-size:12px;color:#777}
 .done{display:none;text-align:center}
 .done-icon{font-size:46px;margin-bottom:8px}
 .done-text{font-size:16px;line-height:1.6}
+.hidden-frame{display:none}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="card">
+<div class="card">
 
-    <div id="formSection">
-      <h1>ไม่อนุมัติใบเบิกค่าใช้จ่าย</h1>
-      <div id="info" class="info">กำลังตรวจสอบรายการ...</div>
+<div id="formSection">
+<h1>ไม่อนุมัติใบเบิกค่าใช้จ่าย</h1>
+<div id="info" class="info">กำลังตรวจสอบรายการ...</div>
 
-      <label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
-      <textarea id="reason" required placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+<label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
+<textarea id="reason" required placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
 
-      <button id="submitBtn" type="button">ยืนยันไม่อนุมัติ</button>
+<button id="submitBtn" type="button">ยืนยันไม่อนุมัติ</button>
+<div id="message" class="message"></div>
 
-      <div id="message" class="message"></div>
-
-      <div class="small" style="margin-top:14px;text-align:center">
-        เมื่อยืนยันแล้ว ระบบจะบันทึกเหตุผลและแจ้งพนักงานผ่าน LINE
-      </div>
-    </div>
-
-    <div id="doneSection" class="done">
-      <div class="done-icon">✓</div>
-      <h1 class="success-title">ดำเนินการเรียบร้อยแล้ว</h1>
-      <div id="doneInfo" class="done-text"></div>
-      <div class="small" style="margin-top:16px">
-        สามารถปิดหน้านี้ได้
-      </div>
-    </div>
-
-  </div>
+<div class="small" style="margin-top:14px;text-align:center">
+เมื่อยืนยันแล้ว ระบบจะบันทึกเหตุผลและแจ้งพนักงานผ่าน LINE
+</div>
 </div>
 
+<div id="doneSection" class="done">
+<div class="done-icon">✓</div>
+<h1 class="success-title">ดำเนินการเรียบร้อยแล้ว</h1>
+<div id="doneInfo" class="done-text"></div>
+<div class="small" style="margin-top:16px">กำลังกลับไปหน้า LINE...</div>
+</div>
+
+</div>
+</div>
+
+<iframe id="submitFrame" name="submitFrame" class="hidden-frame"></iframe>
+
+<form id="rejectForm" method="get" target="submitFrame"
+      action="https://script.google.com/macros/s/AKfycbzh-qFLiriNI-j6bHS6jHVwN5tat0wGEo7DnFRr7PoC41z18bt8EDqStvRK1yctI494/exec">
+<input type="hidden" name="action" value="rejectExpense">
+<input type="hidden" name="decision" value="reject">
+<input type="hidden" name="token" id="tokenField">
+<input type="hidden" name="expenseId" id="expenseIdField">
+<input type="hidden" name="rejectionReason" id="reasonField">
+</form>
+
 <script>
-const WEB_APP_URL='https://script.google.com/macros/s/AKfycbzh-qFLiriNI-j6bHS6jHVwN5tat0wGEo7DnFRr7PoC41z18bt8EDqStvRK1yctI494/exec';
+const params=new URLSearchParams(location.search);
+const token=params.get('token')||'';
+const expenseId=params.get('expenseId')||'';
+const done=params.get('done')==='1';
+const already=params.get('already')==='1';
 
-const params = new URLSearchParams(location.search);
-const token = params.get('token') || '';
-const expenseId = params.get('expenseId') || '';
-const done = params.get('done') === '1';
+const info=document.getElementById('info');
+const btn=document.getElementById('submitBtn');
 
-const info = document.getElementById('info');
-const btn = document.getElementById('submitBtn');
+if(expenseId) info.textContent='เลขที่ใบเบิก: '+expenseId;
+else info.textContent='ไม่พบเลขที่ใบเบิก';
 
-if (expenseId) {
-  info.textContent = 'เลขที่ใบเบิก: ' + expenseId;
-} else {
-  info.textContent = 'กำลังดำเนินการใบเบิกค่าใช้จ่าย';
+function showMessage(text,type){
+  const el=document.getElementById('message');
+  el.style.display='block';
+  el.className='message '+type;
+  el.textContent=text;
 }
 
-function showMessage(text, ok) {
-  const el = document.getElementById('message');
-  el.style.display = 'block';
-  el.className = 'message ' + (ok ? 'success' : 'error');
-  el.textContent = text;
-}
-
-function showDone() {
-  document.getElementById('formSection').style.display = 'none';
-  document.getElementById('doneSection').style.display = 'block';
-
-  document.getElementById('doneInfo').textContent =
+function showDone(){
+  document.getElementById('formSection').style.display='none';
+  document.getElementById('doneSection').style.display='block';
+  document.getElementById('doneInfo').textContent=
     expenseId
-      ? 'บันทึกผลไม่อนุมัติใบเบิก ' + expenseId + ' เรียบร้อยแล้ว'
+      ? 'บันทึกผลไม่อนุมัติใบเบิก '+expenseId+' เรียบร้อยแล้ว'
       : 'บันทึกผลไม่อนุมัติเรียบร้อยแล้ว';
+
+  setTimeout(function(){
+    window.location.href='https://line.me/R/nv/chat';
+  },1000);
 }
 
-function submitReject() {
-  const reason = document.getElementById('reason').value.trim();
-
-  if (!token) {
-    showMessage('ไม่พบ Approval Token กรุณาเปิดจากปุ่มใน LINE อีกครั้ง', false);
-    return;
-  }
-
-  if (!expenseId) {
-    showMessage('ไม่พบเลขที่ใบเบิก กรุณาเปิดลิงก์จากปุ่มใน LINE อีกครั้ง', false);
-    return;
-  }
-
-  if (!reason) {
-    showMessage('กรุณาระบุเหตุผลที่ไม่อนุมัติ', false);
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'กำลังบันทึก...';
-
-  const url =
-    WEB_APP_URL +
-    '?action=rejectExpense' +
-    '&decision=reject' +
-    '&token=' + encodeURIComponent(token) +
-    '&expenseId=' + encodeURIComponent(expenseId) +
-    '&rejectionReason=' + encodeURIComponent(reason);
-
-  // ส่งไป Apps Script เพื่อบันทึกผล
-  // Apps Script จะประมวลผลแล้ว redirect กลับมาหน้านี้ด้วย done=1
-  window.location.replace(url);
+function showAlready(){
+  document.getElementById('formSection').innerHTML=
+    '<h1 class="warning-title">⚠️ ดำเนินการไปแล้ว</h1>'+
+    '<div class="message warning" style="display:block">'+
+    (expenseId
+      ? 'ใบเบิก '+escapeHtml(expenseId)+' รายการนี้ได้รับการดำเนินการไปแล้ว ไม่สามารถกดไม่อนุมัติซ้ำได้'
+      : 'รายการนี้ได้รับการดำเนินการไปแล้ว ไม่สามารถกดซ้ำได้')+
+    '</div>'+
+    '<div class="small" style="display:block;text-align:center;margin-top:16px">สามารถปิดหน้านี้และกลับไป LINE ได้</div>';
+  setTimeout(function(){
+    window.location.href='https://line.me/R/nv/chat';
+  },1800);
 }
 
-if (done) {
-  showDone();
-} else {
-  btn.addEventListener('click', submitReject);
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
+
+function submitReject(){
+  const reason=document.getElementById('reason').value.trim();
+
+  if(!token){showMessage('ไม่พบ Approval Token กรุณาเปิดจากปุ่มใน LINE อีกครั้ง','error');return;}
+  if(!expenseId){showMessage('ไม่พบเลขที่ใบเบิก กรุณาเปิดลิงก์จากปุ่มใน LINE อีกครั้ง','error');return;}
+  if(!reason){showMessage('กรุณาระบุเหตุผลที่ไม่อนุมัติ','error');return;}
+
+  btn.disabled=true;
+  btn.textContent='กำลังบันทึก...';
+
+  document.getElementById('tokenField').value=token;
+  document.getElementById('expenseIdField').value=expenseId;
+  document.getElementById('reasonField').value=reason;
+
+  document.getElementById('rejectForm').submit();
+}
+
+/*
+ * Apps Script จะส่งผลกลับมาทาง postMessage
+ * หน้า reject.html จึงไม่ต้องเปลี่ยนไปหน้า Apps Script
+ */
+window.addEventListener('message',function(event){
+  if(!event.data || event.data.type!=='expenseApprovalResult') return;
+
+  if(event.data.success){
+    showDone();
+  }else if(event.data.already){
+    showAlready();
+  }else{
+    btn.disabled=false;
+    btn.textContent='ยืนยันไม่อนุมัติ';
+    showMessage(event.data.message||'ไม่สามารถดำเนินการได้','error');
+  }
+});
+
+if(done) showDone();
+else if(already) showAlready();
+else if(!token) showMessage('ไม่พบ Approval Token กรุณาเปิดจากปุ่มใน LINE อีกครั้ง','error');
+else btn.addEventListener('click',submitReject);
 </script>
 </body>
 </html>
