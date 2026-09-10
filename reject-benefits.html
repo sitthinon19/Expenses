@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ไม่อนุมัติคำขอลา</title>
+<title>ไม่อนุมัติ Benefits Claim</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f7;color:#222;font-family:Arial,"Noto Sans Thai",sans-serif}
@@ -19,7 +19,6 @@ textarea{display:block;width:100%;min-height:135px;padding:12px;border:1px solid
 textarea:focus{outline:none;border-color:#777}
 button{width:100%;border:0;border-radius:11px;padding:14px;margin-top:15px;font-size:16px;font-weight:bold;cursor:pointer}
 .reject-btn{background:#c62828;color:#fff}
-.line-btn{background:#fff;border:1px solid #ccc;color:#333}
 button:disabled{opacity:.55;cursor:not-allowed}
 .error{display:none;color:#c62828;background:#fff2f2;padding:10px;border-radius:9px;margin-top:9px;font-size:14px}
 .loading{display:none;text-align:center;color:#666;margin-top:11px}
@@ -32,58 +31,57 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </style>
 </head>
 <body>
+
 <div class="container">
-<div class="card">
+  <div class="card">
 
-<div id="formArea">
-<h1>❌ ไม่อนุมัติคำขอลา</h1>
-<p class="desc">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
+    <div id="formArea">
+      <h1>❌ ไม่อนุมัติ Benefits Claim</h1>
+      <p class="desc">กรุณาระบุเหตุผลในการไม่อนุมัติ</p>
 
-<div class="info">
-  <div class="info-row">
-    <span class="info-label">เลขที่คำขอ</span>
-    <strong id="requestId">กำลังโหลด...</strong>
+      <div class="info">
+        <div class="info-row">
+          <span class="info-label">เลขที่คำขอ</span>
+          <strong id="requestId">กำลังโหลด...</strong>
+        </div>
+      </div>
+
+      <label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
+      <textarea id="reason" placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+
+      <div id="error" class="error"></div>
+
+      <button id="submitButton" class="reject-btn" type="button">
+        ยืนยันไม่อนุมัติ
+      </button>
+
+      <div id="loading" class="loading">กำลังบันทึกข้อมูล...</div>
+
+      <div class="small">
+        เมื่อบันทึกแล้ว ระบบจะกลับไปหน้า LINE อัตโนมัติ
+      </div>
+    </div>
+
+    <div id="successArea" class="success">
+      <div class="success-icon">✓</div>
+      <h2>ไม่อนุมัติเรียบร้อย</h2>
+      <p>บันทึกเหตุผลเรียบร้อยแล้ว</p>
+    </div>
+
   </div>
 </div>
 
-<label for="reason">เหตุผลที่ไม่อนุมัติ *</label>
-<textarea id="reason" placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ"></textarea>
-
-<div id="error" class="error"></div>
-
-<button id="submitButton" class="reject-btn" type="button">
-  ยืนยันไม่อนุมัติ
-</button>
-
-<div id="loading" class="loading">
-  กำลังบันทึกข้อมูล...
-</div>
-
-<div class="small">
-  เมื่อบันทึกแล้ว ระบบจะกลับไปหน้า LINE อัตโนมัติ
-</div>
-</div>
-
-<div id="successArea" class="success">
-  <div class="success-icon">✓</div>
-  <h2>ไม่อนุมัติเรียบร้อย</h2>
-  <p>บันทึกเหตุผลเรียบร้อยแล้ว</p>
-</div>
-
-</div>
-</div>
-
-<!-- ส่งไป Apps Script แบบซ่อน ผู้ใช้จะไม่เห็นหน้า Apps Script -->
-<iframe name="leaveRejectFrame" id="leaveRejectFrame" class="hidden"></iframe>
+<iframe name="benefitsRejectFrame" id="benefitsRejectFrame" class="hidden"></iframe>
 
 <form id="rejectForm"
       method="GET"
-      target="leaveRejectFrame"
+      target="benefitsRejectFrame"
       action="https://script.google.com/macros/s/AKfycbysP0tyA-5YpcgUieO6IrMlcHbnqwektx-MaoeMhYYsgx2LJDJ3V2TvFfgEqrSsEBxkCg/exec">
-  <input type="hidden" name="action" value="reject">
+
+  <input type="hidden" name="action" value="rejectBenefits">
   <input type="hidden" name="decision" value="reject">
   <input type="hidden" name="token" id="tokenField">
-  <input type="hidden" name="leaveId" id="leaveIdField">
+  <input type="hidden" name="claimId" id="claimIdField">
   <input type="hidden" name="rejectionReason" id="reasonField">
 </form>
 
@@ -98,8 +96,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
     params.get('ApprovalTokenL1') ||
     '';
 
-  const leaveId =
-    params.get('leaveId') ||
+  const claimId =
+    params.get('claimId') ||
     params.get('requestId') ||
     params.get('RequestID') ||
     params.get('id') ||
@@ -113,58 +111,40 @@ button:disabled{opacity:.55;cursor:not-allowed}
   const submitButton = document.getElementById('submitButton');
   const loading = document.getElementById('loading');
 
-  requestId.textContent = leaveId || 'ไม่พบเลขที่คำขอ';
+  requestId.textContent = claimId || 'ไม่พบเลขที่คำขอ';
 
   document.getElementById('tokenField').value = token;
-  document.getElementById('leaveIdField').value = leaveId;
+  document.getElementById('claimIdField').value = claimId;
 
-  /*
-   * ฟังก์ชันกลับ LINE
-   *
-   * ลำดับ:
-   * 1. พยายามเปิด LINE ด้วย URL Scheme
-   * 2. ใช้ https deep link เป็น fallback
-   * 3. ถ้ายังไม่ได้ ให้ย้อนกลับหน้าก่อนหน้า
-   *
-   * ทำให้เหมาะกับทั้ง iPhone/Android และ browser ที่เปิดจาก LINE
-   */
   let leaving = false;
 
   function returnToLine(){
+
     if(leaving) return;
     leaving = true;
 
     const lineScheme = 'line://nv/chat';
     const lineHttps = 'https://line.me/R/nv/chat';
 
-    /*
-     * เรียก URL Scheme ก่อน เพื่อให้ระบบปฏิบัติการเปิด LINE App
-     */
-    try {
+    try{
       window.location.href = lineScheme;
-    } catch(e) {}
+    }catch(e){}
 
-    /*
-     * ถ้า URL Scheme ถูก browser บล็อก ให้ใช้ LINE HTTPS
-     */
     setTimeout(function(){
-      try {
+      try{
         window.location.replace(lineHttps);
-      } catch(e) {}
-    }, 500);
+      }catch(e){}
+    },500);
 
-    /*
-     * fallback สุดท้าย: กลับหน้าก่อนหน้า
-     */
     setTimeout(function(){
-      try {
+      try{
         if(document.visibilityState === 'visible'){
           if(history.length > 1){
             history.back();
           }
         }
-      } catch(e) {}
-    }, 1800);
+      }catch(e){}
+    },1800);
   }
 
   function showError(message){
@@ -172,17 +152,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
     error.style.display = 'block';
   }
 
-  /*
-   * ถ้า Apps Script ส่งกลับมาพร้อม done=1
-   * แสดงหน้าสำเร็จแล้วกลับ LINE
-   */
   if(done){
     document.getElementById('formArea').style.display = 'none';
     document.getElementById('successArea').style.display = 'block';
-    setTimeout(returnToLine, 700);
+    setTimeout(returnToLine,700);
   }
 
-  submitButton.addEventListener('click', function(){
+  submitButton.addEventListener('click',function(){
 
     error.style.display = 'none';
 
@@ -193,7 +169,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
       return;
     }
 
-    if(!leaveId){
+    if(!claimId){
       showError('ไม่พบเลขที่คำขอ กรุณาเปิดลิงก์จากปุ่ม “ไม่อนุมัติ” ใน LINE อีกครั้ง');
       return;
     }
@@ -210,27 +186,21 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
     document.getElementById('reasonField').value = rejectionReason;
 
-    /*
-     * สำคัญ:
-     * ส่ง GET ไป Apps Script ใน iframe ที่ซ่อนอยู่
-     * หน้าหลักจึงไม่เปลี่ยนไปหน้า Apps Script
-     */
     document.getElementById('rejectForm').submit();
 
-    /*
-     * รอให้ Apps Script รับคำขอ แล้วกลับ LINE
-     */
     setTimeout(function(){
+
       document.getElementById('formArea').style.display = 'none';
       document.getElementById('successArea').style.display = 'block';
 
-      setTimeout(returnToLine, 700);
-    }, 1500);
-  });
+      setTimeout(returnToLine,700);
 
-  document.getElementById('backLineButton').addEventListener('click', returnToLine);
+    },1500);
+
+  });
 
 })();
 </script>
+
 </body>
 </html>
