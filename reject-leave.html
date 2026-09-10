@@ -25,7 +25,8 @@
 const params=new URLSearchParams(location.search);
 const token=params.get('token')||'';
 const leaveId=params.get('leaveId')||params.get('id')||'';
-const apiUrl=params.get('apiUrl')||'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+const apiUrl=params.get('apiUrl')||'
+https://script.google.com/macros/s/AKfycbwTBrfYj8cvwczS_9p9CRlHKIeov9T03rRQNLM9HE1cOgWChkdtaQp_iuq4pm2o4UsCaw/exec';
 document.getElementById('leaveId').textContent=leaveId||'-';
 if(!token){document.getElementById('missing').style.display='block';document.getElementById('formArea').style.display='none';}
 document.getElementById('submitBtn').addEventListener('click',async()=>{
