@@ -41,7 +41,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .remove{background:#fdecec;color:#c62828;padding:6px 9px;font-size:12px}
 .history{margin-top:14px}
 .history-card{border:1px solid #e4e8ec;border-radius:11px;padding:11px;margin-top:8px}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef1f4;font-size:12px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef1f4;font-size:12px;border:1px solid #d9dee3}.badge.approved{background:#dcfce7;color:#166534;border-color:#86efac}.badge.pending{background:#fef3c7;color:#92400e;border-color:#fcd34d}.badge.paid{background:#dbeafe;color:#1e40af;border-color:#93c5fd}.badge.rejected{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
 .small{font-size:12px;color:#777}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 @media(max-width:380px){.container{padding:10px}.card{padding:15px}.row{gap:7px}}
@@ -80,7 +80,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <script>
 
 const LIFF_ID = '2011333828-aMWRLpui';
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwV5tCfKkH3X5V3JHJ4g2TzsaTgh1RASIhP1Y_3pZilLCVoXM3oHaLgq5-DOK88S9Z9Fw/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxsng83Eh2-x9Io2oDwRMHfRy038H8XNYVegT0x7_-rFy5OCzr5humbHhH9YMaEWpy6OQ/exec';
 let idToken = '';
 
 async function initLiff() {
@@ -209,13 +209,21 @@ async function loadHistory(){
   const box=document.getElementById('history'); box.innerHTML='<div class="loading">กำลังโหลด...</div>';
   const r=await apiCall({action:'getExpenseHistory',idToken});
   if(!r.success){box.textContent=r.message||'โหลดไม่สำเร็จ';return;}
-  box.innerHTML=r.items.length?r.items.map(x=>`
+  box.innerHTML=r.items.length?r.items.map(x=>{
+    const sm={'Pending Level 1':'รออนุมัติ Level 1','Pending Level 2':'รออนุมัติ Level 2','Pending Finance':'รอ Finance','Approved':'อนุมัติแล้ว','Rejected':'ไม่อนุมัติ'};
+    const pm={'Pending':'รอจ่ายเงิน','Paid':'จ่ายเงินแล้ว'};
+    const sc=x.status==='Approved'?'approved':(x.status==='Rejected'?'rejected':'pending');
+    const pc=x.paymentStatus==='Paid'?'paid':'pending';
+    return `
     <div class="history-card">
       <div style="font-weight:700">${escapeHtml(x.expenseId)}</div>
       <div class="small">${escapeHtml(x.date)} · ${Number(x.total).toLocaleString()} บาท</div>
       <div style="margin-top:5px">${escapeHtml(x.purpose)}</div>
-      <div style="margin-top:6px"><span class="badge">${escapeHtml(x.status||'-')}</span> <span class="badge">${escapeHtml(x.paymentStatus||'-')}</span></div>
-    </div>`).join(''):'ยังไม่มีรายการเบิก';
+      <div style="margin-top:8px">
+        <div class="small">สถานะอนุมัติ</div><span class="badge ${sc}">${escapeHtml(sm[x.status]||x.status||'-')}</span>
+        ${x.status==='Approved'?`<div class="small" style="margin-top:5px">สถานะการจ่าย</div><span class="badge ${pc}">${escapeHtml(pm[x.paymentStatus]||x.paymentStatus||'-')}</span>`:''}
+      </div>
+    </div>`;}).join(''):'ยังไม่มีรายการเบิก';
 }
 async function pageInit(){
   document.getElementById('addItemBtn').onclick=addItem;
