@@ -80,7 +80,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <script>
 
 const LIFF_ID = '2011333828-aMWRLpui';
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyJzD-hzFhypYYMhcnwVC2t50u2MRN2DpLLAfVIyhPf0DykEQkVMOlK6MNjNDFV92DqEQ/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwV5tCfKkH3X5V3JHJ4g2TzsaTgh1RASIhP1Y_3pZilLCVoXM3oHaLgq5-DOK88S9Z9Fw/exec';
 let idToken = '';
 
 async function initLiff() {
@@ -153,16 +153,20 @@ function calcTotal(){
 }
 async function loadExpenseTypes(select){
   try{
-    // ExpenseTypes is intentionally loaded from a small public endpoint only if backend is extended.
-    // For now use the same standard types created by setupHRMiniAllModules.
-    const types=[
-      ['TRAVEL','ค่าเดินทาง'],['FUEL','ค่าน้ำมัน'],['MEAL','ค่าอาหาร'],
-      ['ACCOMMODATION','ค่าที่พัก'],['OFFICE','อุปกรณ์สำนักงาน'],
-      ['TELEPHONE','ค่าโทรศัพท์/อินเทอร์เน็ต'],['OTHER','อื่น ๆ'],['ADVANCE','เงินทดรองจ่าย']
-    ];
-    select.innerHTML='<option value="">-- เลือกประเภท --</option>'+types.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');
-  }catch(e){select.innerHTML='<option value="">ไม่สามารถโหลดประเภทได้</option>';}
+    select.innerHTML='<option value="">กำลังโหลดประเภท...</option>';
+    const r=await apiCall({action:'getExpenseTypes',idToken});
+    if(!r.success) throw new Error(r.message||'โหลดประเภทค่าใช้จ่ายไม่สำเร็จ');
+    const items=Array.isArray(r.items)?r.items:[];
+    select.innerHTML='<option value="">-- เลือกประเภท --</option>'+items.map(x=>`<option value="${escapeHtml(x.code)}">${escapeHtml(x.name)}</option>`).join('');
+    if(!items.length){
+      select.innerHTML='<option value="">ไม่มีประเภทค่าใช้จ่ายที่เปิดใช้งาน</option>';
+    }
+  }catch(e){
+    select.innerHTML='<option value="">ไม่สามารถโหลดประเภทได้</option>';
+    console.error('loadExpenseTypes',e);
+  }
 }
+
 function fileToBase64(file){
   return new Promise((resolve,reject)=>{
     if(!file){resolve(null);return;}
